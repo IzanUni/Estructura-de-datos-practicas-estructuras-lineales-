@@ -1,0 +1,785 @@
+Index: TEST/Java/ListaSETest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TEST/Java/ListaSETest.java b/TEST/Java/ListaSETest.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/TEST/Java/ListaSETest.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,59 @@
++import PRACTICA1ED.IteradorSE;
++import PRACTICA1ED.ListaSE;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class ListaSETest {
++
++    @org.junit.jupiter.api.Test
++    void add() {
++        ListaSE<Integer> lista = new ListaSE<>();
++        assertTrue(lista.add(1));
++        assertTrue(lista.add(2));
++        assertTrue(lista.add(3));
++        assertEquals(3, lista.getNumElementos());
++    }
++
++    @org.junit.jupiter.api.Test
++    void delete() {
++        ListaSE<String> lista = new ListaSE<>();
++        lista.add("A");
++        lista.add("B");
++        lista.add("C");
++
++        assertTrue(lista.delete("B"));
++        assertFalse(lista.delete("X"));
++        assertEquals(2, lista.getNumElementos());
++    }
++
++    @org.junit.jupiter.api.Test
++    void getIterador() {
++        ListaSE<Integer> lista = new ListaSE<>();
++        lista.add(10);
++        lista.add(20);
++        lista.add(30);
++
++        IteradorSE<Integer> iterador = lista.getIterador();
++        assertTrue(iterador.hasNext());
++        assertEquals(10, iterador.next());
++        assertTrue(iterador.hasNext());
++        assertEquals(20, iterador.next());
++        assertTrue(iterador.hasNext());
++        assertEquals(30, iterador.next());
++        assertFalse(iterador.hasNext());
++    }
++
++    @org.junit.jupiter.api.Test
++    void getNumElementos() {
++        ListaSE<Double> lista = new ListaSE<>();
++        assertEquals(0, lista.getNumElementos());
++
++        lista.add(1.1);
++        lista.add(2.2);
++        lista.add(3.3);
++        assertEquals(3, lista.getNumElementos());
++
++        lista.delete(2.2);
++        assertEquals(2, lista.getNumElementos());
++    }
++}
+Index: src/PRACTICA1ED/ListaArray.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/ListaArray.java b/src/PRACTICA1ED/ListaArray.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/ListaArray.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,61 @@
++package PRACTICA1ED;
++
++public class ListaArray<T> implements Lista<T> {
++    private T[] elementos;
++    private int size;
++
++
++    public ListaArray(int longitud) {
++        elementos = (T[]) new Object[longitud];
++        size = longitud;
++    }
++    @Override
++    public boolean add(T elemento) {
++        // Verificar si el array está lleno (comprobamos la última posición del array)
++        if (elementos[elementos.length - 1] != null) {
++            // Si el array está lleno, redimensionarlo
++            T[] nuevoArray = (T[]) new Object[elementos.length * 2];
++            System.arraycopy(elementos, 0, nuevoArray, 0, elementos.length);
++            elementos = nuevoArray; // Asignamos el nuevo array
++        }
++
++        // Buscar el primer lugar vacío para agregar el elemento
++        for (int i = 0; i < elementos.length; i++) {
++            if (elementos[i] == null) {
++                elementos[i] = elemento; // Agregar el elemento
++                return true;
++            }
++        }
++        return false; // No se pudo agregar
++    }
++
++    @Override
++    public boolean delete(T elemento) {
++        for (int i = 0; i < elementos.length; i++) {
++            if (elementos[i] != null && elementos[i].equals(elemento)) {
++                // Desplazamos los elementos a la izquierda
++                for (int j = i; j < elementos.length - 1; j++) {
++                    elementos[j] = elementos[j + 1];
++                }
++                elementos[elementos.length - 1] = null; // Limpiar la última posición
++                return true; // Elemento eliminado
++            }
++        }
++        return false; // No se encontró el elemento
++    }
++
++    @Override
++    public Iterador<T> getIterador() {
++        return new IteradorBasico<>(elementos);
++    }
++    @Override
++    public int getNumElementos() {
++        int count = 0;
++        for (T elemento : elementos) {
++            if (elemento != null) {
++                count++;
++            }
++        }
++        return count;
++    }
++}
+\ No newline at end of file
+Index: src/PRACTICA1ED/IteradorBasico.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/IteradorBasico.java b/src/PRACTICA1ED/IteradorBasico.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/IteradorBasico.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,53 @@
++package PRACTICA1ED;
++
++import java.util.NoSuchElementException;
++
++class IteradorBasico<T> implements Iterador<T> {
++    private T[] miLista;
++    private int actual;
++
++    public IteradorBasico(T[] miLista) {
++        this.miLista = miLista;
++        this.actual = 0;
++    }
++
++    @Override
++    public boolean hasNext() {
++        // Buscamos el siguiente elemento no nulo
++        for (int i = actual; i < miLista.length; i++) {
++            if (miLista[i] != null) {
++                return true; // Hay un siguiente elemento
++            }
++        }
++        return false; // No hay más elementos no nulos
++    }
++
++    @Override
++    public T next() {
++        if (!hasNext()) {
++            throw new NoSuchElementException("No hay más elementos");
++        }
++
++        // Buscamos el siguiente elemento no nulo
++        while (miLista[actual] == null) {
++            actual++;
++        }
++
++        return miLista[actual++]; // Retorna el elemento actual y avanza el índice
++    }
++
++    @Override
++    public void delete() {
++        if (actual == 0 || miLista[actual - 1] == null) {
++            System.out.println("No hay elementos para eliminar.");
++            return;
++        }
++
++        // Desplazar los elementos a la izquierda
++        for (int i = actual - 1; i < miLista.length - 1; i++) {
++            miLista[i] = miLista[i + 1];
++        }
++
++        miLista[miLista.length - 1] = null; // Limpiar la última posición
++    }
++}
+\ No newline at end of file
+Index: src/PRACTICA1ED/ElementoDoble.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/ElementoDoble.java b/src/PRACTICA1ED/ElementoDoble.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/ElementoDoble.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,12 @@
++package PRACTICA1ED;
++
++public class ElementoDoble<T> {
++    T dato;
++    ElementoDoble<T> siguiente;
++    ElementoDoble<T> anterior;
++    public ElementoDoble(T dato){
++        this.dato = dato;
++        this.siguiente = null;
++        this.anterior = null;
++    }
++}
+Index: TEST/Java/PilaTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TEST/Java/PilaTest.java b/TEST/Java/PilaTest.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/TEST/Java/PilaTest.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,32 @@
++import PRACTICA1ED.Pila;
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class PilaTest {
++
++    @Test
++    void push() {
++        Pila<Integer> pila = new Pila<>();
++        pila.push(10);
++        pila.push(20);
++
++        // Verificamos que el último elemento añadido sea 20
++        assertEquals(20, pila.pop());
++        assertEquals(10, pila.pop());
++    }
++
++    @Test
++    void pop() {
++        Pila<String> pila = new Pila<>();
++        pila.push("A");
++        pila.push("B");
++        pila.push("C");
++
++        assertEquals("C", pila.pop());
++        assertEquals("B", pila.pop());
++        assertEquals("A", pila.pop());
++
++        assertNull(pila.pop());
++    }
++}
+Index: src/PRACTICA1ED/ListaDE.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/ListaDE.java b/src/PRACTICA1ED/ListaDE.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/ListaDE.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,68 @@
++package PRACTICA1ED;
++
++public class ListaDE<T> implements Lista<T> {
++    ElementoDoble<T> inicio;
++    ElementoDoble<T> fin;
++
++
++    public ListaDE(){
++        inicio = null;
++        fin = null;
++    }
++
++    @Override
++    public boolean add(T dato) {
++        ElementoDoble<T> elemento = new ElementoDoble<>(dato);
++        if (inicio == null) {
++            this.inicio = elemento;
++            this.fin = elemento;
++        }else{
++            fin.siguiente = elemento;
++            elemento.anterior = fin;
++            this.fin=elemento;
++        }
++        return true;
++    }
++
++    @Override
++    public boolean delete(T elemento) {
++        ElementoDoble<T> actual = inicio;
++        if (actual == null) return false;
++
++        while (actual != null && !(actual.dato.equals(elemento))) {
++            actual = actual.siguiente;
++        }
++
++        if (actual == null) return false; // No se encuentra el elemento
++
++        if (actual.anterior != null) {
++            actual.anterior.siguiente = actual.siguiente;
++        } else {
++            inicio = actual.siguiente; // Eliminar el primer elemento
++        }
++
++        if (actual.siguiente != null) {
++            actual.siguiente.anterior = actual.anterior;
++        } else {
++            fin = actual.anterior; // Eliminar el último elemento
++        }
++
++        return true;
++    }
++
++    @Override
++    public Iterador<T> getIterador() {
++        return new IteradorListaDE<>(this);
++    }
++
++    @Override
++    public int getNumElementos() {
++        int size = 0;
++        ElementoDoble<T> actual = inicio;
++        while (actual != null) {
++            size++;
++            actual = actual.siguiente;
++        }
++        return size;
++    }
++}
+Index: src/PRACTICA1ED/Pila.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/Pila.java b/src/PRACTICA1ED/Pila.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/Pila.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,21 @@
++package PRACTICA1ED;
++
++public class Pila<T> {
++    private ListaDE<T> milista;
++
++    public Pila(){
++        this.milista = new ListaDE<>();
++    }
++    public void push(T elemento){
++        milista.add(elemento);
++    }
++    public T pop(){
++        if(milista.fin == null){
++            System.out.println("PRACTICA1ED.Lista vacia");
++            return null;
++        }
++        T dato = milista.fin.dato;
++        milista.delete(dato);
++        return dato;
++    }
++}
+Index: src/PRACTICA1ED/Cola.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/Cola.java b/src/PRACTICA1ED/Cola.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/Cola.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,20 @@
++package PRACTICA1ED;
++
++public class Cola<T> {
++    private ListaDE<T> milista;
++
++    public Cola() {
++        this.milista = new ListaDE<>();
++    }
++    public void enqueue(T elemento) {
++        milista.add(elemento);
++    }
++    public T dequeue() {
++        if(milista.inicio == null){
++            return null;
++        }
++        T dato = milista.inicio.dato;
++        milista.delete(dato);
++        return dato;
++    }
++}
+Index: src/PRACTICA1ED/ListaSE.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/ListaSE.java b/src/PRACTICA1ED/ListaSE.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/ListaSE.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,62 @@
++package PRACTICA1ED;
++
++public class ListaSE<T> implements Lista<T> {
++    ElementoSE<T> inicio;
++
++    public ListaSE() {
++        this.inicio = null;
++    }
++
++    @Override
++    public boolean add(T elemento) {
++        ElementoSE<T> nuevo = new ElementoSE<>(elemento);
++        if (inicio == null) {
++            inicio = nuevo;
++            inicio.siguiente = null;
++            return true;
++        } else {
++            ElementoSE<T> temporal = inicio;
++            while (temporal.siguiente != null) {
++                temporal = temporal.siguiente;
++            }
++            temporal.siguiente = nuevo;
++            nuevo.siguiente = null;
++        }
++        return true;
++    }
++
++    @Override
++    public boolean delete(T elemento) {
++        if (inicio == null) {
++            return false;
++        }
++        if (inicio.dato == elemento) {
++            inicio = inicio.siguiente;
++        }
++        ElementoSE<T> actual = inicio;
++        while (actual.siguiente != null && !actual.siguiente.dato.equals(elemento)) {
++            actual = actual.siguiente;
++        }
++        if (actual.siguiente != null) {
++            actual.siguiente = actual.siguiente.siguiente;
++            return true;
++        }
++        return false;
++    }
++
++    @Override
++    public IteradorSE<T> getIterador() {
++        return new IteradorSE<>(this);
++    }
++
++    @Override
++    public int getNumElementos() {
++        int size = 0;
++        ElementoSE<T> temporal = inicio;
++        while (temporal != null) {
++            temporal = temporal.siguiente;
++            size++;
++        }
++        return size;
++    }
++}
+\ No newline at end of file
+Index: src/PRACTICA1ED/ElementoSE.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/ElementoSE.java b/src/PRACTICA1ED/ElementoSE.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/ElementoSE.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,10 @@
++package PRACTICA1ED;
++
++public class ElementoSE<T> {
++    T dato;
++    ElementoSE<T> siguiente;
++    public ElementoSE(T midato) {
++        this.dato = midato;
++        this.siguiente = null;
++    }
++}
+Index: src/PRACTICA1ED/Iterador.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/Iterador.java b/src/PRACTICA1ED/Iterador.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/Iterador.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,7 @@
++package PRACTICA1ED;
++
++public interface Iterador<T> {
++    boolean hasNext();
++    T next();
++    void delete();
++}
+Index: src/PRACTICA1ED/IteradorListaDE.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/IteradorListaDE.java b/src/PRACTICA1ED/IteradorListaDE.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/IteradorListaDE.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,64 @@
++package PRACTICA1ED;
++
++import java.util.NoSuchElementException;
++
++public class IteradorListaDE<T> implements Iterador<T> {
++    private ElementoDoble<T> actual;
++    private ListaDE<T> milista;
++
++    public IteradorListaDE(ListaDE<T> milista) {
++        this.milista = milista;
++        this.actual = milista.inicio;
++    }
++
++    @Override
++    public boolean hasNext() {
++        return actual != null;
++    }
++
++    @Override
++    public T next() {
++
++        if (actual == null) {
++            throw new NoSuchElementException("No hay más elementos");
++        }
++
++        T dato = actual.dato;
++        actual = actual.siguiente;
++        return dato;
++    }
++
++    public boolean hasPrevious() {
++        return actual != null && actual.anterior != null;
++    }
++
++    public T previous() {
++        if (!hasPrevious()) {
++            return null;
++        }
++        actual = actual.anterior;
++        return actual.dato;
++    }
++
++    @Override
++    public void delete() {
++        if (actual == null) {
++            return;
++        }
++
++
++        if (actual.anterior != null) {
++            actual.anterior.siguiente = actual.siguiente;
++        } else {
++            milista.inicio = actual.siguiente;
++        }
++
++        if (actual.siguiente != null) {
++            actual.siguiente.anterior = actual.anterior;
++        } else {
++            milista.fin = actual.anterior;
++        }
++
++        actual = actual.siguiente;
++    }
++}
+\ No newline at end of file
+Index: TEST/Java/ColaTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TEST/Java/ColaTest.java b/TEST/Java/ColaTest.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/TEST/Java/ColaTest.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,33 @@
++import PRACTICA1ED.Cola;
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class ColaTest {
++
++    @Test
++    void enqueue() {
++        Cola<Integer> cola = new Cola<>();
++        cola.enqueue(1);
++        cola.enqueue(2);
++        cola.enqueue(3);
++
++        assertEquals(1, cola.dequeue());
++        assertEquals(2, cola.dequeue());
++        assertEquals(3, cola.dequeue());
++    }
++
++    @Test
++    void dequeue() {
++        Cola<String> cola = new Cola<>();
++        cola.enqueue("X");
++        cola.enqueue("Y");
++        cola.enqueue("Z");
++
++        assertEquals("X", cola.dequeue());
++        assertEquals("Y", cola.dequeue());
++        assertEquals("Z", cola.dequeue());
++
++        assertNull(cola.dequeue());
++    }
++}
+Index: src/PRACTICA1ED/IteradorSE.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/IteradorSE.java b/src/PRACTICA1ED/IteradorSE.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/IteradorSE.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,30 @@
++package PRACTICA1ED;
++
++public class IteradorSE<T> implements Iterador<T>{
++    ElementoSE<T> actual;
++
++    public IteradorSE(ListaSE<T> milista) {
++        this.actual = milista.inicio;
++    }
++    @Override
++    public boolean hasNext() {
++        return actual != null;
++    }
++    @Override
++    public T next() {
++        if (actual == null) {
++            return null;
++        }
++        T dato = actual.dato;
++        actual = actual.siguiente;
++        return dato;
++    }
++    public void delete(){
++        if (actual == null) {
++            return;
++        }if(actual.siguiente == null){
++            actual = null;
++        }
++        actual = actual.siguiente;
++    }
++}
+Index: src/PRACTICA1ED/Lista.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/PRACTICA1ED/Lista.java b/src/PRACTICA1ED/Lista.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/src/PRACTICA1ED/Lista.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,8 @@
++package PRACTICA1ED;
++
++public interface Lista<T>{
++    boolean add(T elemento);
++    boolean delete(T elemento);
++    Iterador<T> getIterador();
++    int getNumElementos();
++}
+Index: TEST/Java/ListaArrayTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/TEST/Java/ListaArrayTest.java b/TEST/Java/ListaArrayTest.java
+new file mode 100644
+--- /dev/null	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
++++ b/TEST/Java/ListaArrayTest.java	(revision 7d55ad46982b5675e1f1b6f11e608945451adf9b)
+@@ -0,0 +1,80 @@
++import PRACTICA1ED.Iterador;
++import PRACTICA1ED.ListaArray;
++import org.junit.jupiter.api.Test;
++import static org.junit.jupiter.api.Assertions.*;
++
++class ListaArrayTest {
++
++    @Test
++    void add() {
++        ListaArray<Integer> lista = new ListaArray<>(2);
++        assertTrue(lista.add(1));
++        assertTrue(lista.add(2));
++
++        // Verifica que se expanda correctamente el array
++        assertTrue(lista.add(3));
++
++        // Verifica que el tamaño de la lista sea correcto después de la expansión
++        assertEquals(3, lista.getNumElementos());
++    }
++
++    @Test
++    void delete() {
++        ListaArray<String> lista = new ListaArray<>(3);
++        lista.add("A");
++        lista.add("B");
++        lista.add("C");
++
++        // Elimina un elemento y verifica
++        assertTrue(lista.delete("B"));
++        assertFalse(lista.delete("X")); // No existe en la lista
++
++        // Verifica que el número de elementos es correcto
++        assertEquals(2, lista.getNumElementos());
++
++        // Verifica el contenido de la lista después de eliminar
++        assertFalse(lista.delete("B")); // "B" ya no existe
++    }
++
++    @Test
++    void getIterador() {
++        ListaArray<Integer> lista = new ListaArray<>(3);
++        lista.add(10);
++        lista.add(20);
++        lista.add(30);
++
++        // Obtenemos el iterador
++        Iterador<Integer> iterador = lista.getIterador();
++
++        assertTrue(iterador.hasNext());
++        assertEquals(10, iterador.next());
++
++        assertTrue(iterador.hasNext());
++        assertEquals(20, iterador.next());
++
++        assertTrue(iterador.hasNext());
++        assertEquals(30, iterador.next());
++
++        assertFalse(iterador.hasNext());
++    }
++
++    @Test
++    void getNumElementos() {
++        ListaArray<Double> lista = new ListaArray<>(2);
++
++        // Verifica el número de elementos antes de agregar
++        assertEquals(0, lista.getNumElementos());
++
++        // Agrega algunos elementos
++        lista.add(1.1);
++        lista.add(2.2);
++        lista.add(3.3);
++
++        // Verifica que el número de elementos sea correcto
++        assertEquals(3, lista.getNumElementos());
++
++        // Elimina un elemento y verifica
++        lista.delete(3.3);
++        assertEquals(2, lista.getNumElementos());
++    }
++}
+\ No newline at end of file
